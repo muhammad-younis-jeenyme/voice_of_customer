@@ -244,13 +244,11 @@ def anonymize(text, max_len=120):
 
 
 SAFETY_CAT_MAP = {
-    "serious incident": "Harassment",
-    "driving recklessly": "Reckless driving",
-    "not matching the profile": "Identity mismatch",
-    "not matching the information": "Identity mismatch",
-    "did not match the app": "Identity mismatch",
-    "harass": "Harassment",
-    "discriminated": "Harassment",
+    "driver was driving recklessly": "Reckless driving",
+    "driver was not matching the profile": "Identity mismatch",
+    "car was not matching the information": "Identity mismatch",
+    "driver/car did not match the app": "Identity mismatch",
+    "driver discriminated": "Harassment",
 }
 
 
