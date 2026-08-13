@@ -251,23 +251,13 @@ def theme_pct(theme_counts, persona_sample_size):
 
 
 def anonymize_summary(text, category):
-  """One-line anonymized safety summary."""
-  t = (text or "")
-  # Strip Zendesk category prefix like "reckless_driving ::"
-  t = re.sub(r"^[a-z_]+\s*::\s*", "", t, flags=re.I)
-  t = re.sub(r"\b\d{8,}\b", "[phone]", t)
-  t = re.sub(r"\b[A-Z][a-z]+\s+[A-Z][a-z]+\b", "a user", t)
-  t = t.strip()
-  if not t or re.match(r"^[\u0600-\u06FF\-]+$", t.replace(" ", "")):
-      defaults = {
-          "Harassment": "Rider reported inappropriate driver behavior during trip",
-          "Reckless driving": "Rider reported dangerous driving and felt unsafe",
-          "Identity mismatch": "Rider reported driver/vehicle did not match app profile",
-      }
-      return defaults.get(category, f"{category} incident reported during trip")
-  if len(t) > 100:
-      t = t[:97] + "..."
-  return t
+  """One-line anonymized safety summary — never expose raw comment text."""
+  defaults = {
+      "Harassment": "Rider reported inappropriate and harassing driver behavior during trip",
+      "Reckless driving": "Rider reported dangerous driving, speeding, and felt unsafe during trip",
+      "Identity mismatch": "Rider reported driver or vehicle did not match app booking details",
+  }
+  return defaults.get(category, f"{category} incident reported during trip")
 
 
 def run(report_date: str):
@@ -430,22 +420,8 @@ def run(report_date: str):
   driver_themes = theme_pct(driver_theme_counts, len(driver_sample))
   rider_themes = theme_pct(rider_theme_counts, len(rider_sample))
 
-  # Dedupe safety by category (keep first 3 distinct)
-  seen_cats = set()
-  unique_safety = []
-  for sf in safety_flags:
-      if sf["category"] not in seen_cats:
-          seen_cats.add(sf["category"])
-          unique_safety.append(sf)
-      if len(unique_safety) >= 3:
-          break
-  # If fewer than 3 categories, add more from same categories
-  if len(unique_safety) < 3:
-      for sf in safety_flags:
-          if sf not in unique_safety:
-              unique_safety.append(sf)
-          if len(unique_safety) >= 3:
-              break
+  # Keep up to 3 safety examples (allow same category with distinct incidents)
+  unique_safety = safety_flags[:3]
 
   # Priorities
   top_rider = rider_themes[:3]
