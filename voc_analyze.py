@@ -380,34 +380,38 @@ def main():
 
     SAFETY_EMOJI = {"Harassment": "🆘", "Reckless driving": "🏎️", "Identity mismatch": "🚙"}
 
+    THEME_ACTIONS = {
+        "Overcharging / fare disputes": "Audit final-fare recalculation, estimate vs actual fare gaps, and route-deviation detection.",
+        "Driver conduct": "Strengthen driver conduct enforcement, deactivation triggers, and post-ride complaint SLAs.",
+        "Route manipulation / slow driving": "Improve route monitoring, ETA accuracy, and slow-driving / detour alerts.",
+        "Wrong driver / car vs app": "Tighten vehicle/driver identity verification and mismatch alerts before trip start.",
+        "Cancellation fees not received / unfair fines": "Review cancellation compensation rules and automate fee credit for eligible driver cancels.",
+        "Passenger conduct": "Tighten passenger conduct reporting, cash-payment enforcement, and driver support SLAs.",
+        "Passenger didn't pay (cash)": "Improve cash-payment confirmation flows and passenger no-pay enforcement.",
+        "Earnings & fares (low pay per km, weak offers)": "Review fare floors, per-km rates, and offer quality in low-demand zones.",
+        "Payment not credited / withdrawals": "Review payout timing, cancellation compensation rules, and wallet transfer reliability.",
+        "Vehicle smell / cleanliness": "Reinforce vehicle cleanliness standards and driver re-education on hygiene.",
+        "Cancellation (unfair fees, driver-initiated)": "Review rider cancellation-fee policy and driver-initiated cancel triggers.",
+        "Payment & charging errors": "Fix duplicate-charge detection and wallet credit reconciliation.",
+    }
+
     # Priorities (data-driven)
     priority_specs = []
-    if rider_themes:
-        t, p = rider_themes[0]
-        priority_specs.append(
-            (t, p, "rider",
-             "Audit final-fare recalculation, estimate vs actual fare gaps, and route-deviation detection.")
-        )
-    if driver_themes:
-        t, p = driver_themes[0]
-        priority_specs.append(
-            (t, p, "driver",
-             "Tighten passenger conduct reporting, cash-payment enforcement, and driver support SLAs.")
-        )
-    if len(rider_themes) > 1:
-        t, p = rider_themes[1]
-        priority_specs.append(
-            (t, p, "rider",
-             "Improve route monitoring, ETA accuracy, and slow-driving / detour alerts.")
-        )
-    for t, p in driver_themes[1:]:
-        if len(priority_specs) >= 3:
-            break
-        if not any(t == s[0] for s in priority_specs):
-            priority_specs.append(
-                (t, p, "driver",
-                 "Review payout timing, cancellation compensation rules, and wallet transfer reliability.")
-            )
+    seen_themes = set()
+
+    def add_priority(theme, pct, who):
+        if theme in seen_themes or len(priority_specs) >= 3:
+            return
+        action = THEME_ACTIONS.get(theme, "Review related product and ops workflows.")
+        priority_specs.append((theme, pct, who, action))
+        seen_themes.add(theme)
+
+    for theme, p in rider_themes[:2]:
+        add_priority(theme, p, "rider")
+    for theme, p in driver_themes[:2]:
+        add_priority(theme, p, "driver")
+    for theme, p in rider_themes[2:] + driver_themes[2:]:
+        add_priority(theme, p, "rider" if theme in RIDER_THEMES else "driver")
 
     priorities = [
         f"{i+1}. **{t}** — {p} of {who} sample; prominent across ride_rating and Zendesk. {action}"
