@@ -14,7 +14,7 @@ Update these values before the first scheduled run:
 | **Report timezone**      | `Asia/Riyadh` (UTC+3)               | Digest covers **yesterday** in this timezone               |
 | **Snowflake table**      | `jeeny_prod.general.feedbackevents` | Primary source                                             |
 | **Slack canvas ID**      | F0BDZ51GQCT                         | Set after first run creates the canvas; store in this file |
-| **Slack notify channel** | -                                   | `#product-announcements` — change if needed                |
+| **Slack notify channel** | `disabled`                          | Do not post daily digest notifications to any channel      |
 | **Sample size per cell** | `100`                               | Max rows sampled per `feedback_source × persona`           |
 | **Min comment length**   | `3`                                 | Exclude noise (`.`, `Q`, single chars)                     |
 
@@ -380,16 +380,9 @@ Use this **exact** canvas structure (emoji headers + bulleted issues):
   - **title:** `Voice of Customer`
   - **content:** Full digest from Step 7
 2. Save returned `canvas_id` and `canvas_url`
-3. Update `REPLACE_WITH_CANVAS_ID` in this file's Configuration section
-4. Post to notify channel:
+3. Update the canvas ID in this file's Configuration section
 
-```text
-:bar_chart: *Voice of Customer — {report_day_name}*
-Daily digest published → {canvas_url}
-{one_line_summary_of_top_priority}
-```
-
-Use `slack_send_message` on channel `C07HCELL00M`.
+**Do not** post a channel notification (`C027T34M6V6` or any other channel).
 
 #### Subsequent runs (canvas ID configured)
 
@@ -410,8 +403,8 @@ Use `slack_send_message` on channel `C07HCELL00M`.
 ```
 
 1. If the canvas grows beyond ~30 daily entries, delete the oldest digest section (use `edit_type: delete` on its date heading section) to keep the canvas manageable
-2. Post the same channel notification as first run
-3. Always share `canvas_url` in the completion message
+2. **Do not** post a channel notification (`C027T34M6V6` or any other channel)
+3. Share `canvas_url` in the agent completion message only
 
 **Never fabricate section IDs.** Always read the canvas immediately before updating.
 
@@ -426,7 +419,7 @@ Use `slack_send_message` on channel `C07HCELL00M`.
 | ----------------------------- | ----------------------------------------------------------------------------------------------- |
 | Snowflake query timeout       | Narrow to single-day filter; run volume + sample queries separately                             |
 | Zero comments for a cell      | Show `0 · n/a` in table                                                                         |
-| Slack canvas update fails     | Fall back to `slack_create_canvas` with title `Voice of Customer — {date}` and alert in channel |
+| Slack canvas update fails     | Fall back to `slack_create_canvas` with title `Voice of Customer — {date}`; report failure in completion message |
 | Sample too small (<100 total) | Still publish; note low volume in callout                                                       |
 | MCP auth error                | Stop and report; do not publish partial digest                                                  |
 
@@ -484,5 +477,5 @@ Adjust schedule if you prefer the digest before 09:00 KSA standups.
 - [ ] Issue sections use emoji headers (🏎️ 🧍 ⚠️ 🎯) with bulleted themes — never inline paragraphs
 - [ ] Safety summaries anonymized
 - [ ] Canvas updated (prepend) or created on first run
-- [ ] Channel notification posted with canvas link
-- [ ] Top priority mentioned in Slack message
+- [ ] No channel notification sent
+- [ ] Top priority mentioned in agent completion message
